@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dépose ton dossier — Sur nos pages · La Brassée</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200;300;400;500;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --jaune: #f7d135;
+    --jaune-clair: rgba(247, 209, 53, 0.15);
+    --jaune-trame: rgba(247, 209, 53, 0.3);
+    --jaune-fort: rgba(247, 209, 53, 0.5);
+    --creme: rgba(205, 196, 157, 0.2);
+    --creme-fort: rgba(205, 196, 157, 0.6);
+    --sombre: #100f09;
+    --sombre-alt: #1f1c0f;
+    --noir-pur: #0a0905;
+    --blanc: #ffffff;
+    --blanc-doux: rgba(255, 255, 255, 0.85);
+    --gris: rgba(255, 255, 255, 0.55);
+    --rouge: #ff6b6b;
+    --vert: #8ad672;
+
+    --glass-bg: rgba(255, 255, 255, 0.04);
+    --glass-bg-fort: rgba(255, 255, 255, 0.07);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-border-fort: rgba(255, 255, 255, 0.2);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+
+    --font-titre: 'Oswald', 'DIN Condensed', 'Helvetica Neue Condensed', Impact, sans-serif;
+    --font-corps: 'Lato', 'Acumin Pro', 'Helvetica Neue', Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--sombre); }
+  body {
+    font-family: var(--font-corps);
+    color: var(--blanc);
+    line-height: 1.6;
+    font-size: 16px;
+    font-weight: 300;
+    background:
+      radial-gradient(ellipse at 30% 10%, rgba(247, 209, 53, 0.10), transparent 55%),
+      radial-gradient(ellipse at 70% 90%, rgba(247, 209, 53, 0.05), transparent 50%),
+      linear-gradient(to bottom, var(--sombre) 0%, var(--sombre-alt) 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Spots — décor CSS */
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    width: 60vmin; height: 100vmin;
+    pointer-events: none;
+    z-index: 1;
+    background: radial-gradient(ellipse at center, rgba(247, 209, 53, 0.06), transparent 60%);
+    filter: blur(40px);
+  }
+  body::before { top: -20vmin; left: -10vmin; transform: rotate(-12deg); animation: spotA 14s ease-in-out infinite; }
+  body::after  { top: -20vmin; right: -10vmin; transform: rotate(12deg);  animation: spotB 16s ease-in-out infinite; }
+  @keyframes spotA { 0%,100% { opacity: 0.5; } 50% { opacity: 0.95; } }
+  @keyframes spotB { 0%,100% { opacity: 0.95; } 50% { opacity: 0.45; } }
+
+  .watermark {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(85vmin, 700px); height: min(85vmin, 700px);
+    pointer-events: none; z-index: 0; opacity: 0.05;
+    animation: respire 8s ease-in-out infinite;
+  }
+  .watermark svg { width: 100%; height: 100%; }
+  .watermark svg path { stroke: var(--jaune) !important; stroke-width: 1.2 !important; }
+  @keyframes respire {
+    0%, 100% { opacity: 0.05; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.08; transform: translate(-50%, -50%) scale(1.02); }
+  }
+
+  #app-chargement, #app-charge, #app-erreur-token, header, main, footer { position: relative; z-index: 2; }
+  .container { max-width: 820px; margin: 0 auto; padding: 0 24px; }
+
+  #app-chargement {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 40px 24px; text-align: center;
+  }
+  #app-chargement .titre-chargement {
+    font-family: var(--font-titre); font-size: 14px; letter-spacing: 4px;
+    text-transform: uppercase; color: var(--jaune); margin-bottom: 18px; font-weight: 300;
+  }
+  #app-chargement .hint { color: var(--gris); font-size: 14px; max-width: 420px; line-height: 1.5; }
+  #app-chargement .hint strong { color: var(--blanc); }
+
+  .ecran-token-invalide {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; padding: 60px 24px;
+  }
+  .ecran-token-invalide h2 {
+    font-family: var(--font-titre); font-size: 36px; font-weight: 200;
+    color: var(--jaune); margin-bottom: 18px; letter-spacing: 1px;
+  }
+  .ecran-token-invalide p { color: var(--blanc-doux); margin-bottom: 24px; max-width: 460px; }
+  .ecran-token-invalide a {
+    color: var(--jaune); text-decoration: none; font-family: var(--font-titre);
+    text-transform: uppercase; letter-spacing: 2px; font-size: 14px;
+    border-bottom: 1px solid var(--jaune-trame); padding-bottom: 4px;
+  }
+
+  header {
+    text-align: center; padding: 56px 24px 40px;
+    border-bottom: 1px solid var(--glass-border); margin-bottom: 36px;
+  }
+  header .logo-svg { width: 96px; height: 96px; margin: 0 auto 22px; }
+  header .logo-svg svg { width: 100%; height: 100%; }
+  header .logo-svg svg .st0, header .logo-svg svg path, header .logo-svg svg polygon { fill: var(--jaune) !important; }
+  header h1 {
+    font-family: var(--font-titre); font-size: clamp(28px, 5vw, 38px);
+    font-weight: 300; letter-spacing: 4px; color: var(--blanc); margin-bottom: 10px;
+  }
+  header .sous-titre {
+    color: var(--creme-fort); font-family: var(--font-titre);
+    text-transform: uppercase; letter-spacing: 3px; font-size: 12px; font-weight: 300;
+  }
+  /* Décor barre de spectre — 7 barres jaunes */
+  .spectre { display: flex; gap: 4px; justify-content: center; margin: 22px auto 0; }
+  .spectre .barre {
+    width: 4px; background: var(--jaune); opacity: 0.55;
+    animation: spectre-anim 1.4s ease-in-out infinite;
+    border-radius: 999px;
+  }
+  .spectre .barre:nth-child(1) { height: 14px; animation-delay: 0s; }
+  .spectre .barre:nth-child(2) { height: 24px; animation-delay: 0.18s; }
+  .spectre .barre:nth-child(3) { height: 36px; animation-delay: 0.36s; }
+  .spectre .barre:nth-child(4) { height: 48px; animation-delay: 0.54s; }
+  .spectre .barre:nth-child(5) { height: 36px; animation-delay: 0.72s; }
+  .spectre .barre:nth-child(6) { height: 24px; animation-delay: 0.9s;  }
+  .spectre .barre:nth-child(7) { height: 14px; animation-delay: 1.08s; }
+  @keyframes spectre-anim { 0%,100% { transform: scaleY(0.6); opacity: 0.5; } 50% { transform: scaleY(1); opacity: 0.95; } }
+
+  .accueil {
+    background: linear-gradient(135deg, rgba(247, 209, 53, 0.10), rgba(247, 209, 53, 0.02));
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--jaune-trame);
+    box-shadow: var(--glass-inset), var(--glass-shadow);
+    padding: 32px 36px; margin-bottom: 32px; border-radius: 20px;
+  }
+  .accueil h2 {
+    font-family: var(--font-titre); font-size: 26px; margin-bottom: 14px;
+    text-transform: uppercase; letter-spacing: 2px; font-weight: 400; color: var(--jaune);
+  }
+  .accueil p { margin-bottom: 10px; color: var(--blanc-doux); }
+  .accueil .dates {
+    background: rgba(0, 0, 0, 0.3); padding: 18px 22px; margin-top: 20px;
+    border-left: 3px solid var(--jaune); border-radius: 4px;
+  }
+  .accueil .dates div {
+    margin-bottom: 8px; font-family: var(--font-titre);
+    text-transform: uppercase; letter-spacing: 1.5px; font-size: 14px;
+    color: var(--blanc-doux); font-weight: 300;
+    display: flex; align-items: baseline; gap: 16px;
+  }
+  .accueil .dates div:last-child { margin-bottom: 0; }
+  .accueil .dates strong { color: var(--jaune); font-weight: 500; min-width: 120px; }
+
+  fieldset {
+    border: 1px solid var(--glass-border); padding: 32px; margin-bottom: 28px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    box-shadow: var(--glass-inset), var(--glass-shadow);
+    border-radius: 20px;
+  }
+  legend {
+    font-family: var(--font-titre); font-weight: 400;
+    text-transform: uppercase; letter-spacing: 4px; font-size: 13px;
+    padding: 8px 18px; background: var(--jaune); color: var(--sombre); border-radius: 999px;
+  }
+  label {
+    display: block; font-family: var(--font-titre); font-weight: 400;
+    font-size: 12px; text-transform: uppercase; letter-spacing: 2px;
+    color: var(--creme-fort); margin-bottom: 8px; margin-top: 20px;
+  }
+  label:first-of-type { margin-top: 0; }
+  label .opt {
+    font-weight: 300; color: var(--gris); text-transform: none;
+    font-size: 11px; letter-spacing: 0.5px; font-style: italic; margin-left: 6px;
+  }
+  input[type="text"], input[type="email"], input[type="tel"], input[type="number"], input[type="url"], textarea, select {
+    width: 100%; padding: 12px 14px; border: 1px solid var(--glass-border);
+    font-family: var(--font-corps); font-size: 15px;
+    background: rgba(0, 0, 0, 0.25); color: var(--blanc);
+    transition: all 0.2s ease; border-radius: 8px;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none; border-color: var(--jaune);
+    background: rgba(0, 0, 0, 0.4); box-shadow: 0 0 0 3px rgba(247, 209, 53, 0.1);
+  }
+  input::placeholder, textarea::placeholder { color: rgba(255, 255, 255, 0.3); }
+  textarea { resize: vertical; min-height: 100px; }
+  .deux-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .trois-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) {
+    .deux-cols, .trois-cols { grid-template-columns: 1fr; gap: 0; }
+  }
+
+  .dropzone-artiste {
+    border: 2px dashed var(--glass-border-fort); padding: 24px; text-align: center;
+    background: rgba(0, 0, 0, 0.2); cursor: pointer; transition: all 0.2s ease; border-radius: 12px;
+  }
+  .dropzone-artiste:hover, .dropzone-artiste.drag-actif { border-color: var(--jaune); background: var(--jaune-clair); }
+  .dropzone-artiste .icone { font-size: 28px; margin-bottom: 8px; }
+  .dropzone-artiste .label-zone {
+    font-family: var(--font-titre); font-weight: 400; font-size: 13px;
+    text-transform: uppercase; letter-spacing: 2px; color: var(--jaune);
+  }
+  .dropzone-artiste .hint { font-size: 12px; color: var(--gris); margin-top: 4px; font-family: var(--font-corps); }
+  .dropzone-artiste img { max-width: 180px; max-height: 180px; margin-top: 12px; border: 2px solid var(--jaune); display: block; margin-left: auto; margin-right: auto; border-radius: 8px; }
+  .dropzone-artiste input[type="file"] { display: none; }
+  .fichier-pose {
+    margin-top: 12px; font-size: 13px; color: var(--vert);
+    font-family: var(--font-corps); word-break: break-all;
+  }
+
+  .info-batch {
+    background: rgba(0, 0, 0, 0.25); padding: 16px 20px; margin-bottom: 18px;
+    border-left: 3px solid var(--jaune); border-radius: 4px;
+    font-size: 14px; color: var(--blanc-doux); line-height: 1.5;
+  }
+
+  .besoins-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+  @media (max-width: 600px) { .besoins-grille { grid-template-columns: 1fr; } }
+  .besoin-case {
+    display: flex; gap: 12px; align-items: center;
+    background: rgba(0, 0, 0, 0.25); border: 1px solid var(--glass-border);
+    padding: 14px 16px; border-radius: 12px; cursor: pointer;
+    font-family: var(--font-corps); font-size: 14px; color: var(--blanc-doux);
+    text-transform: none; letter-spacing: 0; font-weight: 400; margin: 0;
+  }
+  .besoin-case:hover { border-color: var(--jaune-trame); }
+  .besoin-case input[type="checkbox"] { width: 20px; height: 20px; flex-shrink: 0; accent-color: var(--jaune); cursor: pointer; }
+
+  .liens-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .liens-grille { grid-template-columns: 1fr; } }
+  .lien-bloc {
+    background: rgba(0, 0, 0, 0.25); border: 1px solid var(--glass-border);
+    padding: 14px 16px; border-radius: 12px;
+  }
+  .lien-bloc label { margin-top: 0; margin-bottom: 6px; font-size: 11px; }
+  .lien-bloc input { padding: 8px 10px; font-size: 13px; }
+
+  .progress-bar {
+    height: 4px; background: rgba(0, 0, 0, 0.4); margin: 18px 0;
+    overflow: hidden; display: none; border-radius: 999px;
+  }
+  .progress-bar.actif { display: block; }
+  .progress-bar .barre-prog { height: 100%; background: var(--jaune); width: 0; transition: width 0.3s ease; }
+
+  .message {
+    padding: 22px 26px; margin: 20px 0; display: none;
+    border-left: 3px solid; backdrop-filter: blur(20px); border-radius: 12px;
+  }
+  .message.actif { display: block; }
+  .message.succes { background: rgba(138, 214, 114, 0.12); border-color: var(--vert); color: var(--blanc); }
+  .message.erreur { background: rgba(255, 107, 107, 0.12); border-color: var(--rouge); color: var(--blanc); }
+  .message .titre {
+    font-family: var(--font-titre); font-weight: 500; font-size: 14px;
+    text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;
+  }
+  .message.succes .titre { color: var(--vert); }
+  .message.erreur .titre { color: var(--rouge); }
+
+  .envoi { text-align: center; padding: 36px 0 56px; }
+  button.envoyer {
+    background: var(--jaune); color: var(--sombre); border: none;
+    padding: 20px 56px; font-family: var(--font-titre); font-weight: 500;
+    font-size: 16px; text-transform: uppercase; letter-spacing: 4px;
+    cursor: pointer; border-radius: 999px; transition: all 0.3s ease;
+    box-shadow: 0 8px 24px rgba(247, 209, 53, 0.2);
+  }
+  button.envoyer:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(247, 209, 53, 0.4); }
+  button.envoyer:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  footer {
+    text-align: center; padding: 48px 24px;
+    border-top: 1px solid var(--glass-border);
+    color: var(--gris); font-size: 13px;
+    background: rgba(10, 9, 5, 0.6); backdrop-filter: blur(20px);
+  }
+  footer .logo-svg-footer { width: 64px; height: 64px; margin: 0 auto 14px; }
+  footer .logo-svg-footer svg { width: 100%; height: 100%; }
+  footer .logo-svg-footer svg .st0, footer .logo-svg-footer svg path, footer .logo-svg-footer svg polygon { fill: var(--jaune) !important; }
+  footer .nom-marque {
+    font-family: var(--font-titre); color: var(--jaune);
+    font-size: 14px; letter-spacing: 3px; margin-bottom: 8px; text-transform: uppercase;
+  }
+  footer a { color: var(--blanc-doux); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--jaune); }
+</style>
+<!-- PWA La Brassée -->
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="icon" href="icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Pages · Dépôt" />
+<meta name="theme-color" content="#100f09" />
+<!-- /PWA La Brassée -->
+</head>
+<body>
+
+<div class="watermark" id="watermark"></div>
+
+<noscript>
+  <div style="padding:40px;text-align:center;color:#fff;font-family:Lato,sans-serif">
+    <h2 style="color:#f7d135;margin-bottom:12px">JavaScript est requis</h2>
+    <p>Active JavaScript dans ton navigateur pour utiliser cet espace de dépôt.</p>
+  </div>
+</noscript>
+
+<div id="app-chargement">
+  <div class="titre-chargement">Chargement…</div>
+  <div class="hint">Si rien ne s'affiche dans 5 secondes, vérifie que l'URL contient bien <strong>?t=ton-token</strong></div>
+</div>
+
+<div id="app-charge" style="display:none">
+
+<header>
+  <div class="logo-svg" id="logo-header"></div>
+  <h1>LA BRASSÉE — SUR NOS PAGES</h1>
+  <div class="sous-titre">Espace de dépôt pour ta rencontre d'auteur·rice</div>
+  <div class="spectre" aria-hidden="true">
+    <div class="barre"></div><div class="barre"></div><div class="barre"></div>
+    <div class="barre"></div><div class="barre"></div><div class="barre"></div><div class="barre"></div>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="accueil">
+    <h2 id="accueil-titre">Salut <span id="nom-artiste-accueil">…</span></h2>
+    <p id="accueil-p1">Cet espace privé te permet de déposer tout ce dont on a besoin pour ta rencontre d'auteur·rice à La Brassée : ta bio, ton livre, un extrait à lire, tes liens et la signature des conditions.</p>
+    <p id="accueil-p2">Tu peux remplir en plusieurs fois. Quand tu cliques « Envoyer », tout part vers Cédric.</p>
+    <p style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(247,209,53,0.2);font-size:14px;color:rgba(255,255,255,0.75)">📚 <strong style="color:var(--jaune);font-weight:500">Un dimanche, de 17 h à 19 h</strong> · lecture, échange avec le public, signature — dans l'ambiance feutrée du café.</p>
+    <p style="font-size:14px;color:rgba(255,255,255,0.75);margin-top:10px">💸 <strong style="color:var(--jaune);font-weight:500">Vente de livres 100 % à toi</strong> · aucune commission, la vente ne passe pas par notre caisse — c'est ta logistique ou celle de ton éditeur.</p>
+    <p style="font-size:14px;color:rgba(255,255,255,0.75);margin-top:10px">🍺 <strong style="color:var(--jaune);font-weight:500">Aucun cachet</strong> · notre revenu, ce sont les consommations des gens venus te rencontrer. Entrée libre pour le public.</p>
+    <p style="font-size:14px;color:rgba(255,255,255,0.75);margin-top:10px">📣 <strong style="color:var(--jaune);font-weight:500">Promo complète</strong> assurée par la maison · event Facebook, post Instagram, infolettre, TV cuisine. Plus ton dépôt est rodé, plus on a de matière.</p>
+    <div class="dates">
+      <div><strong>Rencontre</strong><span id="date-rencontre">…</span></div>
+      <div><strong>Horaire</strong><span id="heure-rencontre">Dimanche · 17 h → 19 h</span></div>
+    </div>
+  </div>
+
+  <form id="formulaire" onsubmit="return false;">
+
+    <fieldset id="bloc-candidature" style="display:none">
+      <legend>Première candidature · choisis ton dimanche</legend>
+      <p style="color:rgba(255,255,255,0.75);font-size:14px;margin:0 0 14px">Les rencontres ont lieu le <strong>dimanche en 5 à 7</strong> (17 h–19 h). Choisis deux dimanches libres : ça nous permet de te répondre rapidement avec un go/no-go ferme, sans aller-retour par courriel.</p>
+      <div class="deux-cols">
+        <div>
+          <label for="nom_artiste_cand">Nom / nom de plume *</label>
+          <input type="text" id="nom_artiste_cand" placeholder="Ex : Francisco Théo · Marie-Ève Lambert" required>
+        </div>
+        <div>
+          <label for="courriel_cand">Courriel *</label>
+          <input type="email" id="courriel_cand" placeholder="contact@exemple.com" required>
+        </div>
+      </div>
+
+      <label for="date_rencontre_select" style="margin-top:14px">Dimanche souhaité (principal) *
+        <span class="opt">(dimanches libres à venir)</span></label>
+      <select id="date_rencontre_select" required>
+        <option value="" disabled selected>— Chargement des dimanches libres —</option>
+      </select>
+      <p style="color:rgba(255,255,255,0.55);font-size:12px;margin:6px 0 0">La rencontre se tient de 17 h à 19 h. On confirme la date avec toi avant toute annonce publique.</p>
+
+      <label for="date_rencontre_select_2" style="margin-top:14px">Dimanche secondaire *
+        <span class="opt">(au cas où le principal ne marche pas — obligatoire, évite les allers-retours)</span></label>
+      <select id="date_rencontre_select_2" required>
+        <option value="" disabled selected>— Chargement des dimanches libres —</option>
+      </select>
+
+      <label for="disponibilite_cand" style="margin-top:14px">Notes sur ta disponibilité <span class="opt">(facultatif — précise ta flexibilité ou tes contraintes)</span></label>
+      <input type="text" id="disponibilite_cand" placeholder="Ex : flexible sur l'automne sauf la semaine du 12 octobre...">
+    </fieldset>
+
+    <fieldset>
+      <legend>Ton livre · ton univers</legend>
+
+      <label for="bio">Bio courte <span class="opt">(4 à 8 lignes — parcours, ton univers, ce qui se joue dans ton écriture)</span></label>
+      <textarea id="bio" placeholder="Ex : Autrice montréalaise, je publie de la fiction courte depuis 2018. Mon écriture explore..."></textarea>
+
+      <div class="deux-cols">
+        <div>
+          <label for="titre_livre">Titre du livre présenté <span class="opt">(celui que tu viens partager)</span></label>
+          <input type="text" id="titre_livre" placeholder="Ex : Les marées basses">
+        </div>
+        <div>
+          <label for="editeur">Éditeur <span class="opt">(ou « autoédition »)</span></label>
+          <input type="text" id="editeur" placeholder="Ex : Éditions du Passage">
+        </div>
+      </div>
+
+      <div class="deux-cols">
+        <div>
+          <label for="annee_publication">Année de publication</label>
+          <input type="number" id="annee_publication" min="1900" max="2100" placeholder="2025">
+        </div>
+        <div>
+          <label for="isbn">ISBN <span class="opt">(facultatif)</span></label>
+          <input type="text" id="isbn" placeholder="978-2-XXXXX-XXX-X">
+        </div>
+      </div>
+
+      <div class="deux-cols">
+        <div>
+          <label for="cellulaire">Cellulaire <span class="opt">(pour la logistique du 5 à 7)</span></label>
+          <input type="tel" id="cellulaire" placeholder="514 555 1234">
+        </div>
+        <div>
+          <label>Portrait de toi <span class="opt">(facultatif — on l'utilise pour la promo si tu nous donnes le feu vert)</span></label>
+          <div class="dropzone-artiste" id="dropzone-artiste">
+            <div class="icone">📷</div>
+            <div class="label-zone">Glisser ou cliquer</div>
+            <div class="hint">JPG/PNG · max 10 Mo · format libre</div>
+            <img id="apercu-artiste" style="display:none">
+            <input type="file" id="photo-artiste-input" accept="image/*">
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Ton extrait à lire</legend>
+      <div class="info-batch">
+        Donne-nous l'extrait que tu comptes lire (ou un passage représentatif). Colle-le directement ci-dessous, ou dépose un PDF. On l'utilise pour préparer la rencontre et, avec ton accord, en teaser pour la promo.
+      </div>
+      <label for="extrait">Extrait <span class="opt">(colle ton passage ici)</span></label>
+      <textarea id="extrait" placeholder="Colle ici l'extrait que tu souhaites lire lors de la rencontre..." style="min-height:160px"></textarea>
+
+      <label style="margin-top:20px">Ou dépose un PDF <span class="opt">(extrait, dossier de presse, feuillet — facultatif)</span></label>
+      <div class="dropzone-artiste" id="dropzone-pdf">
+        <div class="icone">📄</div>
+        <div class="label-zone">Glisser ou cliquer</div>
+        <div class="hint">PDF · max 15 Mo</div>
+        <div class="fichier-pose" id="pdf-pose" style="display:none"></div>
+        <input type="file" id="pdf-input" accept="application/pdf,.pdf">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Tes traces en ligne</legend>
+      <div class="info-batch">
+        Donne-nous au moins un lien pour qu'on découvre ton travail : ton site, ta page éditeur, ou tes réseaux. Ça nourrit la promo de ta rencontre.
+      </div>
+      <div class="liens-grille">
+        <div class="lien-bloc">
+          <label for="instagram">📷 Instagram</label>
+          <input type="text" id="instagram" placeholder="@ton-compte ou URL">
+        </div>
+        <div class="lien-bloc">
+          <label for="facebook">👍 Facebook</label>
+          <input type="url" id="facebook" placeholder="https://facebook.com/...">
+        </div>
+        <div class="lien-bloc">
+          <label for="site_web">🌐 Site web / page éditeur</label>
+          <input type="url" id="site_web" placeholder="https://...">
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Ta rencontre · besoins</legend>
+      <label for="duree_souhaitee">Durée souhaitée <span class="opt">(lecture + échange)</span></label>
+      <select id="duree_souhaitee">
+        <option value="" disabled selected>— Choisis une durée —</option>
+        <option value="30 min">Environ 30 min</option>
+        <option value="45 min">Environ 45 min</option>
+        <option value="1 h">Environ 1 h</option>
+        <option value="Libre / à discuter">Libre — à discuter ensemble</option>
+      </select>
+
+      <label style="margin-top:20px">De quoi as-tu besoin ? <span class="opt">(coche ce qui s'applique — tout est léger)</span></label>
+      <div class="besoins-grille">
+        <label class="besoin-case"><input type="checkbox" id="besoin_micro"><span>🎤 Micro voix</span></label>
+        <label class="besoin-case"><input type="checkbox" id="besoin_table"><span>🪑 Table + chaise</span></label>
+        <label class="besoin-case"><input type="checkbox" id="besoin_projection"><span>📽️ Projection (écran)</span></label>
+        <label class="besoin-case"><input type="checkbox" id="vente_livres"><span>📚 Je vendrai des livres sur place</span></label>
+      </div>
+      <p style="color:var(--gris);font-size:12px;margin:12px 0 0;font-style:italic">La vente de livres est 100 % à toi, hors de notre caisse (aucune commission). On coche juste pour prévoir une table si besoin.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Signature</legend>
+      <div style="background:rgba(0,0,0,0.25);padding:18px 22px;margin-bottom:18px;border-left:3px solid var(--jaune);border-radius:4px;font-size:14px;color:var(--blanc-doux);line-height:1.6">
+        <div style="font-family:var(--font-titre);text-transform:uppercase;letter-spacing:2px;font-size:12px;color:var(--jaune);margin-bottom:10px">Conditions de la rencontre</div>
+        <ul style="list-style:none;padding:0;margin:0">
+          <li style="padding:6px 0;border-bottom:1px solid var(--glass-border)">📚 <strong style="color:var(--jaune)">Rencontre d'auteur·rice le dimanche, de 17 h à 19 h</strong> · lecture, échange avec le public, signature · présence de l'auteur·rice requise</li>
+          <li style="padding:6px 0;border-bottom:1px solid var(--glass-border)">💸 <strong style="color:var(--jaune)">Vente de livres 100 % à toi</strong> · aucune commission, la vente ne transite pas par notre caisse — logistique de l'auteur·rice ou de son éditeur</li>
+          <li style="padding:6px 0;border-bottom:1px solid var(--glass-border)">🍺 <strong style="color:var(--jaune)">Aucun cachet, aucune majoration</strong> · le revenu de La Brassée, ce sont les consommations du public. Entrée libre.</li>
+          <li style="padding:6px 0;border-bottom:1px solid var(--glass-border)">🔧 <strong style="color:var(--jaune)">Besoins légers fournis</strong> · micro voix, table + chaise, projection sur demande</li>
+          <li style="padding:6px 0;border-bottom:1px solid var(--glass-border)">📣 <strong style="color:var(--jaune)">Promo complète</strong> assurée par la maison (Facebook event, Instagram, infolettre, TV cuisine)</li>
+          <li style="padding:6px 0">📷 Droit d'image pour la communication de la rencontre (et 6 mois après) · nom de l'auteur·rice systématiquement mentionné</li>
+        </ul>
+      </div>
+
+      <label for="signature_nom">Ton nom complet <span class="opt">(pour la signature)</span></label>
+      <input type="text" id="signature_nom" placeholder="Prénom Nom">
+
+      <label style="display:flex;gap:14px;align-items:flex-start;margin-top:20px;cursor:pointer;font-family:var(--font-corps);text-transform:none;letter-spacing:0;font-size:15px;color:var(--blanc);font-weight:400">
+        <input type="checkbox" id="signature_check" style="width:22px;height:22px;flex-shrink:0;margin-top:2px;accent-color:var(--jaune);cursor:pointer">
+        <span>Je soussigné·e <strong id="recap-nom" style="color:var(--jaune)">[ton nom]</strong>, certifie avoir lu et accepté les conditions ci-dessus pour ma rencontre Sur nos pages à La Brassée le <strong id="recap-date" style="color:var(--jaune)">[dimanche choisi]</strong>.</span>
+      </label>
+
+      <div style="margin-top:12px;font-size:13px;color:var(--gris);font-style:italic">En cochant cette case et en envoyant ce formulaire, ta signature électronique sera horodatée et conservée par La Brassée comme preuve d'acceptation des conditions (valeur juridique au Québec — LCJTI, art. 39).</div>
+    </fieldset>
+
+    <div class="progress-bar" id="progress-bar"><div class="barre-prog" id="progress-barre"></div></div>
+    <div class="message" id="message"></div>
+
+    <div class="envoi">
+      <button type="button" class="envoyer" id="bouton-envoi">Envoyer à La Brassée</button>
+    </div>
+
+  </form>
+
+</main>
+
+<footer>
+  <div class="logo-svg-footer" id="logo-footer"></div>
+  <div class="nom-marque">LA BRASSÉE</div>
+  <div>Café · scène · galerie · pages · Rosemont, Montréal</div>
+  <div style="margin-top:8px">Une question ? <a href="mailto:contact@labrassee.cafe">contact@labrassee.cafe</a></div>
+</footer>
+
+</div>
+
+<div id="app-erreur-token" class="ecran-token-invalide" style="display:none">
+  <h2>Ce lien n'est pas valide</h2>
+  <p>Ton lien semble incomplet ou expiré. Écris à Cédric pour qu'il t'en renvoie un.</p>
+  <a href="mailto:contact@labrassee.cafe">contact@labrassee.cafe</a>
+</div>
+
+<script>
+  async function chargerSVG(url, elementId) {
+    try {
+      const r = await fetch(url);
+      const svg = await r.text();
+      document.getElementById(elementId).innerHTML = svg;
+    } catch(e) { console.error('SVG ' + url, e); }
+  }
+  chargerSVG('picto_outlined_white.svg', 'watermark');
+  chargerSVG('full_logo_white.svg', 'logo-header');
+  chargerSVG('full_logo_white.svg', 'logo-footer');
+</script>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://xjlpttrziisldlclhsth.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqbHB0dHJ6aWlzbGRsY2xoc3RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NjkyODMsImV4cCI6MjA5MjA0NTI4M30.JpkTnJF1ZP08ybzFdM8fFUJOTiKYx8ltTe2nxiDPk24';
+  const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let artiste = null;
+  let photoArtisteFichier = null;
+  let pdfFichier = null;
+  let modeCandidature = false; // true si premier dépôt sans token (candidature spontanée)
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Sélection des dimanches libres (5 à 7 littéraire — 1 créneau/semaine)
+  // ─────────────────────────────────────────────────────────────────────────
+  const MOIS_LONG = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+
+  function todayMtlISO() {
+    const f = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Toronto', year: 'numeric', month: '2-digit', day: '2-digit' });
+    const parts = f.formatToParts(new Date());
+    const get = (t) => parts.find(p => p.type === t)?.value || '';
+    return `${get('year')}-${get('month')}-${get('day')}`;
+  }
+
+  function isoToLabelDim(iso) {
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return iso;
+    const annee = parseInt(m[1]);
+    const mois = parseInt(m[2]) - 1;
+    const jour = parseInt(m[3]);
+    return `Dim. ${jour} ${MOIS_LONG[mois]} ${annee}`;
+  }
+
+  async function fetchDimanchesPris() {
+    // Dimanches déjà réservés par une autre rencontre (date_rencontre posée)
+    const today = todayMtlISO();
+    const url = `${SUPABASE_URL}/rest/v1/artistes_pages?select=date_rencontre&date_rencontre=not.is.null&date_rencontre=gte.${today}&limit=200`;
+    try {
+      const res = await fetch(url, { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY } });
+      if (!res.ok) return new Set();
+      const rows = await res.json();
+      return new Set(rows.map(r => r.date_rencontre).filter(Boolean));
+    } catch { return new Set(); }
+  }
+
+  function prochainsDimanches(n) {
+    // Génère les n prochains dimanches à partir d'aujourd'hui (exclu si passé)
+    const today = todayMtlISO();
+    const cur = new Date(today + 'T00:00:00');
+    // avancer jusqu'au prochain dimanche (0 = dimanche)
+    while (cur.getDay() !== 0) cur.setDate(cur.getDate() + 1);
+    // si c'est aujourd'hui dimanche, on saute au suivant (rencontre pas le jour même)
+    if (cur.toISOString().slice(0,10) === today) cur.setDate(cur.getDate() + 7);
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      out.push(cur.toISOString().slice(0, 10));
+      cur.setDate(cur.getDate() + 7);
+    }
+    return out;
+  }
+
+  async function peuplerSelectsDimanches() {
+    const pris = await fetchDimanchesPris();
+    const tous = prochainsDimanches(20);
+    const libres = tous.filter(iso => !pris.has(iso)).slice(0, 16);
+    const selP = document.getElementById('date_rencontre_select');
+    const selS = document.getElementById('date_rencontre_select_2');
+    if (!selP || !selS) return;
+    if (libres.length === 0) {
+      selP.innerHTML = '<option value="" disabled selected>Aucun dimanche libre — écris à contact@labrassee.cafe</option>';
+      selS.innerHTML = '<option value="" disabled selected>Aucun dimanche libre —</option>';
+      return;
+    }
+    const parMois = new Map();
+    for (const iso of libres) {
+      const cleMois = iso.slice(0, 7);
+      if (!parMois.has(cleMois)) parMois.set(cleMois, []);
+      parMois.get(cleMois).push(iso);
+    }
+    const buildOptions = (placeholder) => {
+      let html = `<option value="" disabled selected>${placeholder}</option>`;
+      for (const [cleMois, dates] of parMois) {
+        const m = cleMois.match(/^(\d{4})-(\d{2})$/);
+        const libelleMois = m ? `${MOIS_LONG[parseInt(m[2]) - 1].charAt(0).toUpperCase() + MOIS_LONG[parseInt(m[2]) - 1].slice(1)} ${m[1]}` : cleMois;
+        html += `<optgroup label="${libelleMois}">`;
+        for (const iso of dates) html += `<option value="${iso}">${isoToLabelDim(iso)}</option>`;
+        html += '</optgroup>';
+      }
+      return html;
+    };
+    selP.innerHTML = buildOptions('— Choisis ton dimanche principal —');
+    selS.innerHTML = buildOptions('— Choisis ton dimanche secondaire —');
+    const sync = () => {
+      const v1 = selP.value, v2 = selS.value;
+      Array.from(selS.options).forEach(o => { o.disabled = o.value && o.value === v1; });
+      Array.from(selP.options).forEach(o => { o.disabled = o.value && o.value === v2; });
+      majRecapSignature();
+    };
+    selP.addEventListener('change', sync);
+    selS.addEventListener('change', sync);
+  }
+
+  async function init() {
+    const chargement = document.getElementById('app-chargement');
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('t');
+      const candidature = params.get('candidature');
+      if (!token && candidature === 'pages') {
+        // Mode candidature spontanée : pas de token, on accueille un·e nouvel·le auteur·rice
+        modeCandidature = true;
+        chargement.style.display = 'none';
+        document.getElementById('app-charge').style.display = 'block';
+        document.getElementById('accueil-titre').innerHTML = 'Salut <span id="nom-artiste-accueil">…</span>';
+        document.getElementById('accueil-p1').innerHTML = "<strong style=\"color:var(--jaune)\">Tu veux animer un 5 à 7 littéraire ?</strong> Remplis ce formulaire — c'est ton premier filtre. Plus on voit ton univers (livre, extrait, bio), plus on a envie de t'accueillir un dimanche.";
+        document.getElementById('accueil-p2').textContent = "Cédric te revient rapidement pour confirmer ton dimanche.";
+        const dates = document.querySelector('.accueil .dates');
+        if (dates) dates.style.display = 'none';
+        document.getElementById('bloc-candidature').style.display = 'block';
+
+        const dateParam = params.get('date');
+        try {
+          await peuplerSelectsDimanches();
+          if (dateParam) {
+            const sel = document.getElementById('date_rencontre_select');
+            if (sel && Array.from(sel.options).some(o => o.value === dateParam)) sel.value = dateParam;
+          }
+        } catch (err) {
+          console.error('Erreur peuplerSelectsDimanches:', err);
+          const sel = document.getElementById('date_rencontre_select');
+          if (sel) sel.innerHTML = '<option value="" disabled selected>⚠️ Impossible de charger les dates — recharge la page</option>';
+        }
+        document.addEventListener('input', (e) => {
+          if (e.target && e.target.id === 'nom_artiste_cand') {
+            const v = e.target.value.trim();
+            const accueil = document.getElementById('nom-artiste-accueil');
+            if (accueil) accueil.textContent = v || '…';
+            const sn = document.getElementById('signature_nom');
+            if (sn && !sn.value) sn.value = v;
+            majRecapSignature();
+          }
+        });
+        return;
+      }
+      if (!token) {
+        chargement.style.display = 'none';
+        document.getElementById('app-erreur-token').style.display = 'flex';
+        return;
+      }
+      // Lecture via RPC token-gated (get_dossier_pages) — la table n'expose pas
+      // les PII ni le token en lecture anon.
+      const { data, error } = await supa.rpc('get_dossier_pages', { p_token: token });
+      if (error || !data || !data.id) {
+        console.error('Erreur chargement auteur·rice:', error);
+        chargement.style.display = 'none';
+        document.getElementById('app-erreur-token').style.display = 'flex';
+        return;
+      }
+      artiste = data;
+
+      chargement.style.display = 'none';
+      document.getElementById('app-charge').style.display = 'block';
+      document.getElementById('nom-artiste-accueil').textContent = artiste.nom_artiste || '';
+      const dRencontre = artiste.date_rencontre || artiste.date_rencontre_proposee;
+      document.getElementById('date-rencontre').textContent = dRencontre ? formaterDate(dRencontre) : 'à confirmer';
+
+      // Préremplir les champs texte
+      const champsTexte = ['bio','titre_livre','editeur','isbn','extrait','duree_souhaitee','cellulaire','instagram','facebook','site_web','signature_nom'];
+      champsTexte.forEach(c => {
+        const el = document.getElementById(c);
+        if (el && artiste[c]) el.value = artiste[c];
+      });
+      if (artiste.annee_publication) document.getElementById('annee_publication').value = artiste.annee_publication;
+      // Cases à cocher besoins
+      ['besoin_micro','besoin_projection','besoin_table','vente_livres'].forEach(c => {
+        const el = document.getElementById(c);
+        if (el && artiste[c]) el.checked = true;
+      });
+      if (!document.getElementById('signature_nom').value) {
+        document.getElementById('signature_nom').value = artiste.nom_complet || artiste.nom_artiste || '';
+      }
+      majRecapSignature();
+      if (artiste.signature_acceptee) document.getElementById('signature_check').checked = true;
+    } catch (err) {
+      console.error('Erreur init():', err);
+      chargement.innerHTML = '<div style="color:#ff6b6b;padding:24px;text-align:center;font-family:Lato,sans-serif;max-width:500px"><div style="font-family:Oswald,sans-serif;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:#f7d135;margin-bottom:12px">Une erreur est survenue</div>' + (err.message || err) + '<br><br>Vérifie ta connexion et recharge la page. Si le problème persiste, écris à <a href="mailto:contact@labrassee.cafe" style="color:#f7d135">contact@labrassee.cafe</a>.</div>';
+    }
+  }
+
+  function majRecapSignature() {
+    if (!artiste && !modeCandidature) return;
+    const sn = document.getElementById('signature_nom');
+    const nom = (sn ? sn.value : '').trim() || '[ton nom]';
+    const recapNom = document.getElementById('recap-nom');
+    const recapDate = document.getElementById('recap-date');
+    if (recapNom) recapNom.textContent = nom;
+    let dateAff = 'à confirmer';
+    if (modeCandidature) {
+      const selP = document.getElementById('date_rencontre_select');
+      if (selP && selP.value) dateAff = formaterDate(selP.value);
+    } else if (artiste) {
+      const d = artiste.date_rencontre || artiste.date_rencontre_proposee;
+      if (d) dateAff = formaterDate(d);
+    }
+    if (recapDate) recapDate.textContent = dateAff;
+  }
+  document.addEventListener('input', (e) => {
+    if (e.target && e.target.id === 'signature_nom') majRecapSignature();
+  });
+
+  function formaterDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso + 'T00:00:00');
+    const jours = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+    const mois = ['janv.', 'févr.', 'mars', 'avril', 'mai', 'juin', 'juill.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+    return jours[d.getDay()] + ' ' + d.getDate() + ' ' + mois[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  // Photo portrait
+  const dzArtiste = document.getElementById('dropzone-artiste');
+  const photoArtisteInput = document.getElementById('photo-artiste-input');
+  const apercuArtiste = document.getElementById('apercu-artiste');
+  dzArtiste.addEventListener('click', () => photoArtisteInput.click());
+  dzArtiste.addEventListener('dragover', (e) => { e.preventDefault(); dzArtiste.classList.add('drag-actif'); });
+  dzArtiste.addEventListener('dragleave', () => dzArtiste.classList.remove('drag-actif'));
+  dzArtiste.addEventListener('drop', (e) => {
+    e.preventDefault(); dzArtiste.classList.remove('drag-actif');
+    if (e.dataTransfer.files.length > 0) traiterPhotoArtiste(e.dataTransfer.files[0]);
+  });
+  photoArtisteInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) traiterPhotoArtiste(e.target.files[0]);
+  });
+  function traiterPhotoArtiste(fichier) {
+    if (!fichier.type.startsWith('image/')) return;
+    photoArtisteFichier = fichier;
+    const reader = new FileReader();
+    reader.onload = (e) => { apercuArtiste.src = e.target.result; apercuArtiste.style.display = 'block'; };
+    reader.readAsDataURL(fichier);
+  }
+
+  // PDF extrait
+  const dzPdf = document.getElementById('dropzone-pdf');
+  const pdfInput = document.getElementById('pdf-input');
+  const pdfPose = document.getElementById('pdf-pose');
+  dzPdf.addEventListener('click', () => pdfInput.click());
+  dzPdf.addEventListener('dragover', (e) => { e.preventDefault(); dzPdf.classList.add('drag-actif'); });
+  dzPdf.addEventListener('dragleave', () => dzPdf.classList.remove('drag-actif'));
+  dzPdf.addEventListener('drop', (e) => {
+    e.preventDefault(); dzPdf.classList.remove('drag-actif');
+    if (e.dataTransfer.files.length > 0) traiterPdf(e.dataTransfer.files[0]);
+  });
+  pdfInput.addEventListener('change', (e) => { if (e.target.files.length > 0) traiterPdf(e.target.files[0]); });
+  function traiterPdf(fichier) {
+    const estPdf = fichier.type === 'application/pdf' || /\.pdf$/i.test(fichier.name);
+    if (!estPdf) { afficherMessage('erreur', 'Format non accepté', 'Dépose un fichier PDF.'); return; }
+    pdfFichier = fichier;
+    pdfPose.textContent = '📄 ' + fichier.name + ' (' + Math.round(fichier.size / 1024) + ' ko)';
+    pdfPose.style.display = 'block';
+  }
+
+  document.getElementById('bouton-envoi').addEventListener('click', envoyerTout);
+
+  async function envoyerTout() {
+    const bouton = document.getElementById('bouton-envoi');
+    const message = document.getElementById('message');
+    const progress = document.getElementById('progress-bar');
+    const barre = document.getElementById('progress-barre');
+
+    // En mode candidature : valider nom + courriel + 2 dimanches obligatoires
+    if (modeCandidature) {
+      const nomCand = document.getElementById('nom_artiste_cand').value.trim();
+      const mailCand = document.getElementById('courriel_cand').value.trim();
+      const datePrincipale = document.getElementById('date_rencontre_select').value;
+      const dateSecondaire = document.getElementById('date_rencontre_select_2').value;
+      if (!nomCand) {
+        afficherMessage('erreur', 'Nom requis', "Indique ton nom ou nom de plume avant d'envoyer.");
+        document.getElementById('nom_artiste_cand').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      if (!mailCand || !mailCand.includes('@')) {
+        afficherMessage('erreur', 'Courriel requis', "Indique un courriel valide pour qu'on puisse te répondre.");
+        document.getElementById('courriel_cand').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      if (!datePrincipale) {
+        afficherMessage('erreur', 'Dimanche principal requis', "Choisis un dimanche libre — c'est ce qui nous permet de te répondre rapidement avec un go/no-go ferme.");
+        document.getElementById('date_rencontre_select').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      if (!dateSecondaire) {
+        afficherMessage('erreur', 'Dimanche secondaire requis', "Choisis aussi un dimanche secondaire — au cas où le principal ne marche pas. Ça évite les allers-retours.");
+        document.getElementById('date_rencontre_select_2').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      if (datePrincipale === dateSecondaire) {
+        afficherMessage('erreur', 'Dates identiques', "Le dimanche principal et le secondaire doivent être différents.");
+        document.getElementById('date_rencontre_select_2').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+    }
+
+    const bio = document.getElementById('bio').value.trim();
+    const extrait = document.getElementById('extrait').value.trim();
+    if (!bio && !extrait && !pdfFichier && !modeCandidature) {
+      afficherMessage('erreur', 'Rien à envoyer', "Ajoute au moins ta bio, un extrait ou un PDF avant d'envoyer.");
+      return;
+    }
+
+    const signatureCheck = document.getElementById('signature_check').checked;
+    const signatureNom = document.getElementById('signature_nom').value.trim();
+    if (!signatureCheck || !signatureNom) {
+      afficherMessage('erreur', 'Signature requise', "Remplis ton nom complet et coche la case d'acceptation des conditions avant d'envoyer.");
+      document.querySelector('fieldset:last-of-type').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
+    bouton.disabled = true;
+    bouton.textContent = 'Envoi en cours…';
+    progress.classList.add('actif');
+    message.classList.remove('actif');
+
+    try {
+      // Mode candidature : crée la ligne maintenant pour avoir un token_depot
+      if (modeCandidature && !artiste) {
+        const nomCand = document.getElementById('nom_artiste_cand').value.trim();
+        const mailCand = document.getElementById('courriel_cand').value.trim();
+        const dispoCand = document.getElementById('disponibilite_cand').value.trim();
+        const datePrincipale = document.getElementById('date_rencontre_select').value || null;
+        const dateSecondaire = document.getElementById('date_rencontre_select_2').value || null;
+        const { data: nouveau, error: errIns } = await supa.rpc('creer_candidature_pages', {
+          p_payload: {
+            nom_artiste: nomCand,
+            courriel: mailCand,
+            date_rencontre_proposee: datePrincipale,
+            date_rencontre_proposee_secondaire: dateSecondaire,
+            disponibilite_notes: dispoCand || null,
+          },
+        });
+        if (errIns) throw errIns;
+        artiste = nouveau;
+      }
+
+      let photoArtistePath = artiste.photo_artiste_path || null;
+      if (photoArtisteFichier) {
+        photoArtistePath = await uploadFichier(photoArtisteFichier, `${artiste.token_depot}/artiste/${Date.now()}-${nettoyerNom(photoArtisteFichier.name)}`);
+      }
+      avancerProgress(barre, 25);
+
+      let extraitPdfPath = artiste.extrait_pdf_path || null;
+      if (pdfFichier) {
+        extraitPdfPath = await uploadFichier(pdfFichier, `${artiste.token_depot}/extrait/${Date.now()}-${nettoyerNom(pdfFichier.name)}`);
+      }
+      avancerProgress(barre, 70);
+
+      const champsTexte = ['bio','titre_livre','editeur','isbn','extrait','duree_souhaitee','cellulaire','instagram','facebook','site_web'];
+      const champsUrlStricts = new Set(['site_web','facebook']);
+      function sanitizeUrl(v) {
+        if (!v) return null;
+        let s = String(v).trim();
+        if (!s) return null;
+        if (!/^https?:\/\//i.test(s)) s = 'https://' + s;
+        try {
+          const u = new URL(s);
+          if (!u.hostname.includes('.')) return null;
+          return u.toString();
+        } catch { return null; }
+      }
+      const update = {};
+      champsTexte.forEach(c => {
+        const raw = (document.getElementById(c).value || '').trim();
+        if (champsUrlStricts.has(c)) update[c] = sanitizeUrl(raw);
+        else update[c] = raw || null;
+      });
+      const annee = document.getElementById('annee_publication').value;
+      update.annee_publication = annee ? String(parseInt(annee)) : null;
+      update.besoin_micro = document.getElementById('besoin_micro').checked;
+      update.besoin_table = document.getElementById('besoin_table').checked;
+      update.besoin_projection = document.getElementById('besoin_projection').checked;
+      update.vente_livres = document.getElementById('vente_livres').checked;
+      update.photo_artiste_path = photoArtistePath;
+      update.extrait_pdf_path = extraitPdfPath;
+      update.signature_acceptee = true;
+      update.signature_nom = signatureNom;
+      update.signature_le = new Date().toISOString();
+      update.statut = modeCandidature ? 'candidature_complete' : 'depot_complet';
+
+      const { error: errMaj } = await supa.rpc('maj_dossier_pages', {
+        p_token: artiste.token_depot,
+        p_payload: update,
+      });
+      if (errMaj) throw errMaj;
+
+      avancerProgress(barre, 100);
+
+      const messageSucces = modeCandidature
+        ? `Merci ${artiste.nom_artiste}. Ta candidature est arrivée chez Cédric. Il te revient rapidement avec ton dimanche confirmé. Garde précieusement ce lien personnel pour ajuster ton dossier plus tard : <code style="display:block;margin-top:10px;background:rgba(247,209,53,0.1);padding:8px;border-radius:6px;font-size:12px;word-break:break-all">${window.location.origin}/?t=${artiste.token_depot}</code>`
+        : `Merci ${artiste.nom_artiste}. Cédric te reviendra rapidement. Tu peux fermer cette fenêtre, ou revenir plus tard pour ajuster ton dossier.`;
+      afficherMessage('succes', '✓ Tout est arrivé à La Brassée', messageSucces);
+      bouton.textContent = 'Envoyé ✓';
+      pdfFichier = null;
+      photoArtisteFichier = null;
+      apercuArtiste.style.display = 'none';
+    } catch (err) {
+      console.error(err);
+      afficherMessage('erreur', 'Un problème est survenu', `${err.message || err}. Réessaye dans un instant, ou écris à contact@labrassee.cafe.`);
+      bouton.disabled = false;
+      bouton.textContent = "Réessayer l'envoi";
+      progress.classList.remove('actif');
+      barre.style.width = '0%';
+    }
+  }
+
+  function nettoyerNom(nom) {
+    return nom.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
+  }
+
+  async function uploadFichier(fichier, path) {
+    const { data, error } = await supa.storage.from('artistes-pages-photos').upload(path, fichier, { cacheControl: '3600', upsert: false });
+    if (error) throw error;
+    return data.path;
+  }
+
+  function avancerProgress(barre, pourcent) { barre.style.width = pourcent + '%'; }
+
+  function afficherMessage(type, titre, texte) {
+    const m = document.getElementById('message');
+    m.className = 'message actif ' + type;
+    m.innerHTML = `<div class="titre">${titre}</div><div>${texte}</div>`;
+    m.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  init();
+</script>
+
+<footer class="iacouba-sig"><a href="https://iacouba.ca" target="_blank" rel="noopener"><span>par</span><img src="/iacouba-lockup-contenu.svg" alt="IAcouba"></a></footer><style>.iacouba-sig{display:flex;justify-content:center;padding:20px 12px 26px;margin-top:18px;border-top:1px solid rgba(242,233,214,.12)}.iacouba-sig a{display:flex;align-items:center;gap:.45rem;text-decoration:none;color:rgba(242,233,214,.55);font-size:.74rem;letter-spacing:.02em;opacity:.92}.iacouba-sig img{height:17px;display:block}</style></body>
+</html>
