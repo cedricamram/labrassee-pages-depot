@@ -438,6 +438,10 @@
           </div>
         </div>
       </div>
+      <div>
+        <label for="credit_photo">📸 Crédit photo <span class="opt">(si ta photo a été prise par un·e photographe)</span></label>
+        <input type="text" id="credit_photo" placeholder="Ex : Marie Tremblay · mariephoto.com">
+      </div>
     </fieldset>
 
     <fieldset>
@@ -730,7 +734,7 @@
       document.getElementById('date-rencontre').textContent = dRencontre ? formaterDate(dRencontre) : 'à confirmer';
 
       // Préremplir les champs texte
-      const champsTexte = ['bio','titre_livre','editeur','isbn','extrait','duree_souhaitee','cellulaire','instagram','facebook','site_web','signature_nom'];
+      const champsTexte = ['bio','titre_livre','editeur','isbn','extrait','duree_souhaitee','cellulaire','instagram','facebook','site_web','signature_nom','credit_photo'];
       champsTexte.forEach(c => {
         const el = document.getElementById(c);
         if (el && artiste[c]) el.value = artiste[c];
@@ -917,7 +921,7 @@
       }
       avancerProgress(barre, 70);
 
-      const champsTexte = ['bio','titre_livre','editeur','isbn','extrait','duree_souhaitee','cellulaire','instagram','facebook','site_web'];
+      const champsTexte = ['bio','titre_livre','editeur','isbn','extrait','duree_souhaitee','cellulaire','instagram','facebook','site_web','credit_photo'];
       const champsUrlStricts = new Set(['site_web','facebook']);
       function sanitizeUrl(v) {
         if (!v) return null;
