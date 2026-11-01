@@ -596,16 +596,36 @@
     return `Dim. ${jour} ${MOIS_LONG[mois]} ${annee}`;
   }
 
+  // Statuts d'un dossier murs ou pages qui NE retiennent PAS une date.
+  const STATUTS_INACTIFS = new Set(['refuse','annule','retire','fusionne','doublon','archive']);
+  const actif = (statut) => !STATUTS_INACTIFS.has(String(statut || '').toLowerCase());
+
+  async function lireRest(chemin) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${chemin}`, { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY } });
+    // Échec = on ne propose RIEN plutôt que des dimanches peut-être pris (le catch d'init affiche l'erreur).
+    if (!res.ok) throw new Error('Supabase HTTP ' + res.status + ' sur ' + chemin.split('?')[0]);
+    return await res.json();
+  }
+
   async function fetchDimanchesPris() {
-    // Dimanches déjà réservés par une autre rencontre (date_rencontre posée)
+    // Un dimanche est pris s'il porte déjà, à la même heure (17h-19h) :
+    //  1. une autre rencontre Sur nos pages (artistes_pages.date_rencontre) ;
+    //  2. un vernissage Sur nos murs — dossier Dionysos 01/11/2026, point 3 —
+    //     lu à deux endroits : le calendrier (concerts, type vernissage, planifie/confirme)
+    //     et les dossiers murs actifs (artistes_murs.date_vernissage) ;
+    //  3. toute autre soirée du calendrier ce dimanche-là (planifie/confirme),
+    //     sauf l'accrochage du matin (10h-14h), qui ne gêne pas le 5 à 7.
     const today = todayMtlISO();
-    const url = `${SUPABASE_URL}/rest/v1/artistes_pages?select=date_rencontre&date_rencontre=not.is.null&date_rencontre=gte.${today}&limit=200`;
-    try {
-      const res = await fetch(url, { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY } });
-      if (!res.ok) return new Set();
-      const rows = await res.json();
-      return new Set(rows.map(r => r.date_rencontre).filter(Boolean));
-    } catch { return new Set(); }
+    const [pages, concerts, murs] = await Promise.all([
+      lireRest(`artistes_pages?select=date_rencontre,statut&date_rencontre=not.is.null&date_rencontre=gte.${today}&limit=500`),
+      lireRest(`concerts?select=date_show,type_show,statut&date_show=gte.${today}&statut=in.(planifie,confirme)&limit=1000`),
+      lireRest(`artistes_murs?select=date_vernissage,statut&date_vernissage=not.is.null&date_vernissage=gte.${today}&limit=500`),
+    ]);
+    const pris = new Set();
+    for (const r of pages) if (r.date_rencontre && actif(r.statut)) pris.add(r.date_rencontre);
+    for (const r of concerts) if (r.date_show && String(r.type_show || '').toLowerCase() !== 'accrochage') pris.add(r.date_show);
+    for (const r of murs) if (r.date_vernissage && actif(r.statut)) pris.add(r.date_vernissage);
+    return pris;
   }
 
   function prochainsDimanches(n) {
@@ -692,8 +712,10 @@
           }
         } catch (err) {
           console.error('Erreur peuplerSelectsDimanches:', err);
-          const sel = document.getElementById('date_rencontre_select');
-          if (sel) sel.innerHTML = '<option value="" disabled selected>⚠️ Impossible de charger les dates — recharge la page</option>';
+          for (const id of ['date_rencontre_select', 'date_rencontre_select_2']) {
+            const sel = document.getElementById(id);
+            if (sel) sel.innerHTML = '<option value="" disabled selected>⚠️ Impossible de charger les dates — recharge la page</option>';
+          }
         }
         document.addEventListener('input', (e) => {
           if (e.target && e.target.id === 'nom_artiste_cand') {
